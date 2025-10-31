@@ -1,0 +1,112 @@
+---
+# Namespace for ML applications
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ml-apps
+
+---
+# Deployment for Iris Classifier
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iris-classifier
+  namespace: ml-apps
+  labels:
+    app: iris-classifier
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iris-classifier
+  template:
+    metadata:
+      labels:
+        app: iris-classifier
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: model-server
+        image: ghcr.io/dycouzt/mlops-ai-homelab-model-source:main-latest  # Will be updated by CI/CD
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        env:
+        - name: FLASK_ENV
+          value: "production"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+      # Node selector to run on k3d cluster (we'll label nodes)
+      # For now, this will run wherever it's scheduled
+      # nodeSelector:
+      #   workload: ml-inference
+
+---
+# Service for Iris Classifier
+apiVersion: v1
+kind: Service
+metadata:
+  name: iris-classifier
+  namespace: ml-apps
+  labels:
+    app: iris-classifier
+spec:
+  type: NodePort
+  ports:
+  - port: 8080
+    targetPort: 8080
+    nodePort: 30808
+    protocol: TCP
+    name: http
+  selector:
+    app: iris-classifier
+
+---
+# ArgoCD Application manifest
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: iris-classifier
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Dycouzt/MLOps-AI-Homelab-Infra-Manifests.git
+    targetRevision: main
+    path: applications/iris-classifier
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ml-apps
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
