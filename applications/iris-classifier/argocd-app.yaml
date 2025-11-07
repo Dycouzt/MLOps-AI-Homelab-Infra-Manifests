@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: iris-classifier
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Dycouzt/MLOps-AI-Homelab-Infra-Manifests.git
+    targetRevision: main
+    path: applications/iris-classifier
+  destination:
+    server: https://100.85.38.128:6550  # k3d cluster!
+    namespace: ml-apps
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
