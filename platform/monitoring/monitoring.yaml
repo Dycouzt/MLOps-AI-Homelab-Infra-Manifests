@@ -83,6 +83,15 @@ data:
       - targets: ['mlflow.mlflow.svc.cluster.local:5000']
         labels:
           service: 'mlflow'
+      
+    # Scrape k3d cluster metrics (cross-cluster monitoring)
+    - job_name: 'k3d-ml-apps'
+      static_configs:
+      - targets: ['100.85.38.128:30808']  # k3d NodePort for iris-classifier
+        labels:
+          cluster: 'k3d-on-premises'
+          environment: 'edge'
+          location: 'windows-workstation'
 
 ---
 # Prometheus ServiceAccount
