@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv
+*.pkl
+.pytest_cache/
+.coverage
+htmlcov/
+.DS_Store
+master_context_v1.txt
+master_context_v2.txt
+master_context_v3.txt
