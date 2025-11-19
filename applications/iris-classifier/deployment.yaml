@@ -32,7 +32,7 @@ spec:
     spec:
       containers:
       - name: model-server
-        image: ghcr.io/dycouzt/mlops-ai-platform-model-source:505eb707b0226374f445c61656684cbeeb7b838d
+        image: ghcr.io/dycouzt/mlops-ai-platform-model-source:0cb3652ca94f3e430e587460ea8c7ababc2d31f8
         ports:
         - containerPort: 8080
           name: http
